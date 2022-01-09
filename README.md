@@ -2,4 +2,4 @@
 
 1. Create `.env` with DB_CONNECTION and PORT
 2. Add `keys.js` with public keys
-3. Run `truffle deploy`, to get compiled contracts
+3. Run `truffle deploy`, to get compiled contracts. Create folders `build/contracts` if they are missing
