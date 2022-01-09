@@ -5,8 +5,7 @@ const cors = require("cors");
 const Web3 = require("web3");
 const Citizen = require("./build/contracts/Citizen.json");
 const Data = require("./models/Data");
-const publicKeyRoute = require("./routes/publicKey");
-const { encrypt, decrypt } = require("./encrypt");
+const { encrypt } = require("./encrypt");
 
 require("dotenv").config();
 
@@ -25,17 +24,6 @@ mongoose.connect(
 
 const provider = new Web3.providers.HttpProvider("http://127.0.0.1:7545");
 const web3 = new Web3(provider);
-
-// let accounts;
-// web3.eth.getAccounts().then((res) => {
-//     accounts = res;
-// });
-
-app.use("/key", publicKeyRoute);
-
-app.get("/", (req, res) => {
-    res.send({ message: "Hello world" });
-});
 
 app.get("/data", async (req, res) => {
     const dataId = req.query.dataid;
@@ -61,15 +49,6 @@ app.get("/data", async (req, res) => {
     }
 });
 
-// TODO: Remove this
-app.get("/decrypt", (req, res) => {
-    const requester = req.query.requester;
-    const content = req.query.content;
-    let decrypted = decrypt(requester, content);
-
-    res.send({ content: decrypted });
-});
-
 app.listen(process.env.PORT || 3000, function () {
     console.log(
         "Express server listening on port %d in %s mode",
@@ -77,6 +56,3 @@ app.listen(process.env.PORT || 3000, function () {
         app.settings.env
     );
 });
-
-// permission server bruger public key til at kryptere ->
-// client dekrypter
