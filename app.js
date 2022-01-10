@@ -5,6 +5,7 @@ const cors = require("cors");
 const Web3 = require("web3");
 const Citizen = require("./build/contracts/Citizen.json");
 const Data = require("./models/Data");
+const publicKeyRoute = require("./routes/publicKey")
 const { encrypt } = require("./encrypt");
 
 require("dotenv").config();
@@ -22,6 +23,8 @@ mongoose.connect(
     }
 );
 
+app.use("/key", publicKeyRoute)
+
 const provider = new Web3.providers.HttpProvider("http://127.0.0.1:7545");
 const web3 = new Web3(provider);
 
@@ -29,21 +32,30 @@ app.get("/data", async (req, res) => {
     const dataId = req.query.dataid;
     const requester = req.query.requester;
     const owner = req.query.owner;
+    const userid = req.query.userid;
 
     // Get owner contract
     let contract = new web3.eth.Contract(Citizen.abi, owner);
 
     // See permission for requester
-    let permission = await contract.methods
+    let permission
+    try {
+        permission = await contract.methods
         .getPermission(requester, dataId)
         .call();
+    } catch (error) {
+        console.error("Contract not found. Check that Blockchains are in sync")
+    }
     console.log(`permission: ${permission}`);
-
+    
     if (permission) {
         const data = await Data.findById(dataId);
-        let enc = encrypt(requester, data.content);
-
-        res.status(200).send({ data: enc });
+        let enc = await encrypt(userid, data.content);
+        if (enc === -1) {
+            res.status(500).send({ message: "Public Key Not Found"})
+        } else {
+            res.status(200).send({ data: enc });
+        }
     } else {
         res.status(401).send({ message: "Permission not found" });
     }
